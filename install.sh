@@ -24,13 +24,15 @@
 #   --repo DONO/REPO     repositório dos Releases a instalar e a usar na atualização automática (padrão: este)
 #   --yes, -y            não pergunta nada (usa os padrões); ainda exige --reverb-key, pois não há padrão seguro
 #   --sem-iniciar        não inicia o kiosk ao terminar (fica pronto para o próximo boot)
+#   --root-password S    define a nova senha de root desta máquina (opcional; também lida de PHARUS_SENHA_ROOT).
+#                        Prefira a variável: o argumento fica visível no histórico do shell e na lista de processos.
 set -euo pipefail
 
 URL_PADRAO="https://eventos.ifnmg.edu.br"
 REPO_PADRAO="IFNMG-Almenara/PharusTerminal"
 
 RENDER="software" IMPRESSORA_IP="" IMPRESSORA_USB=0 ROLO="29x90"
-REPO="" HOST_URL="" CHAVE="${TERMINAL_REVERB_KEY:-}" IMPRESSORA="" SIM=0 INICIAR=1
+SENHA_ROOT="${PHARUS_SENHA_ROOT:-}" REPO="" HOST_URL="" CHAVE="${TERMINAL_REVERB_KEY:-}" IMPRESSORA="" SIM=0 INICIAR=1
 
 erro() { printf '\033[31mErro:\033[0m %s\n' "$*" >&2; exit 1; }
 info() { printf '\033[36m==>\033[0m %s\n' "$*"; }
@@ -54,6 +56,7 @@ Opções:
   --repo DONO/REPO     repositório dos Releases (padrão: IFNMG-Almenara/PharusTerminal)
   --yes, -y            não pergunta nada (usa os padrões)
   --sem-iniciar        não inicia o kiosk ao terminar
+  --root-password S    nova senha de root (opcional; ou PHARUS_SENHA_ROOT=...)
 EOF
 	exit 0
 }
@@ -70,6 +73,7 @@ while [[ $# -gt 0 ]]; do
 	--repo) REPO="${2:?}"; shift 2 ;;
 	--yes | -y) SIM=1; shift ;;
 	--sem-iniciar) INICIAR=0; shift ;;
+	--root-password) SENHA_ROOT="${2:?}"; shift 2 ;;
 	-h | --help) ajuda ;;
 	*) erro "opção desconhecida: $1 (use --help)" ;;
 	esac
@@ -213,6 +217,18 @@ if [[ $DIETPI == 1 ]]; then
 	info "ligando o autostart do DietPi (dietpi-autostart 17)"
 	install -D -m 755 "$PASTA/dietpi/custom.sh" /var/lib/dietpi/dietpi-autostart/custom.sh
 	/boot/dietpi/dietpi-autostart 17 >/dev/null
+	# Imagem DietPi recém-gravada: dá a primeira execução (dietpi-update + dietpi-software) como concluída. Sem isso o
+	# dietpi-login no tty1 abre o assistente antes do autostart e, onde o ICMP é bloqueado (ping 9.9.9.9 falha), ele
+	# fica parado num menu de rede e o kiosk nunca abre. Também desliga as verificações de atualização do DietPi.
+	[[ "$(cat /boot/dietpi/.install_stage 2>/dev/null || echo 0)" == 2 ]] || echo 2 >/boot/dietpi/.install_stage
+	sed -i -E 's/^AUTO_SETUP_AUTOMATED=.*/AUTO_SETUP_AUTOMATED=1/; s/^(CONFIG_CHECK_(DIETPI|APT)_UPDATES)=.*/\1=0/' /boot/dietpi.txt
+fi
+
+# --- Senha de root (opcional) ------------------------------------------------------------------------------------------
+
+if [[ -n "$SENHA_ROOT" ]]; then
+	info "definindo a nova senha de root"
+	printf 'root:%s\n' "$SENHA_ROOT" | chpasswd
 fi
 
 # --- Impressora --------------------------------------------------------------------------------------------------------

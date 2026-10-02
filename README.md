@@ -64,6 +64,10 @@ já vem ligado).
 | `--repo DONO/REPO` | este repositório | de onde baixar o Release e para onde o kiosk olha na atualização automática |
 | `--yes`, `-y` | | não pergunta nada (usa os padrões); ainda exige `--reverb-key` |
 | `--sem-iniciar` | | não inicia o kiosk ao terminar (fica pronto para o próximo boot) |
+| `--root-password SENHA` | | define a nova senha de root (opcional). Prefira a variável `PHARUS_SENHA_ROOT=...` antes do comando: o argumento fica no histórico do shell |
+
+No DietPi recém-gravado o instalador também dá a primeira execução como concluída (sem o assistente de update e
+configuração de rede, que trava onde o `ping` é bloqueado) e desliga as verificações de atualização do DietPi.
 
 A chave do Reverb identifica o app no servidor (como a "app key" do Pusher); não é segredo — o próprio site já a
 expõe no JavaScript do navegador. O que precisa ficar privado é o `REVERB_APP_SECRET`, que fica só no backend e
