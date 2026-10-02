@@ -22,6 +22,34 @@ curl -fsSL https://raw.githubusercontent.com/IFNMG-Almenara/PharusTerminal/main/
   --reverb-key <REVERB_APP_KEY> --yes
 ```
 
+### Instalar remotamente por SSH (DietPi)
+
+Da sua máquina, sem abrir o console do dispositivo (o usuário padrão do DietPi é `root`):
+
+```bash
+ssh root@IP_DO_DISPOSITIVO "curl -fsSL https://raw.githubusercontent.com/IFNMG-Almenara/PharusTerminal/main/install.sh | bash -s -- --reverb-key <REVERB_APP_KEY> --yes"
+```
+
+Com URL própria e impressora de rede:
+
+```bash
+ssh root@IP_DO_DISPOSITIVO "curl -fsSL https://raw.githubusercontent.com/IFNMG-Almenara/PharusTerminal/main/install.sh | bash -s -- \
+  --url https://pharus.exemplo.br --reverb-key <REVERB_APP_KEY> --printer-ip 192.168.0.50 --yes"
+```
+
+Para vários dispositivos de uma vez:
+
+```bash
+for ip in 192.168.0.71 192.168.0.72 192.168.0.73; do
+  ssh root@$ip "curl -fsSL https://raw.githubusercontent.com/IFNMG-Almenara/PharusTerminal/main/install.sh | bash -s -- --reverb-key <REVERB_APP_KEY> --yes"
+done
+```
+
+Use sempre `--yes` e `--reverb-key` por SSH sem terminal interativo (não há como responder às perguntas). Ao final, o
+instalador reinicia a sessão do console e o kiosk sobe sozinho; para só deixá-lo pronto para o próximo boot, acrescente
+`--sem-iniciar`. Requer o DietPi/Debian 13 com acesso à internet e o SSH habilitado (no Dropbear padrão do DietPi
+já vem ligado).
+
 ### Opções
 
 | Opção | Padrão | Efeito |
