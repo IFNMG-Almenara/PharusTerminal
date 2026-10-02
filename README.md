@@ -63,7 +63,7 @@ já vem ligado).
 | `--render MODO` | `software` | `software` (CPU) ou `hardware` (GPU); troca depois com `pharus-render` |
 | `--repo DONO/REPO` | este repositório | de onde baixar o Release e para onde o kiosk olha na atualização automática |
 | `--yes`, `-y` | | não pergunta nada (usa os padrões); ainda exige `--reverb-key` |
-| `--sem-iniciar` | | não inicia o kiosk ao terminar (fica pronto para o próximo boot) |
+| `--sem-iniciar` | | não inicia o kiosk nem reinicia a máquina ao terminar (fica pronto para o próximo boot) |
 | `--root-password SENHA` | | define a nova senha de root (opcional). Prefira a variável `PHARUS_SENHA_ROOT=...` antes do comando: o argumento fica no histórico do shell |
 
 No DietPi recém-gravado o instalador também dá a primeira execução como concluída (sem o assistente de update e

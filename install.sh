@@ -23,7 +23,7 @@
 #   --render MODO        software (padrão) ou hardware (GPU); troca depois com 'pharus-render' no dispositivo
 #   --repo DONO/REPO     repositório dos Releases a instalar e a usar na atualização automática (padrão: este)
 #   --yes, -y            não pergunta nada (usa os padrões); ainda exige --reverb-key, pois não há padrão seguro
-#   --sem-iniciar        não inicia o kiosk ao terminar (fica pronto para o próximo boot)
+#   --sem-iniciar        não inicia o kiosk nem reinicia a máquina ao terminar (fica pronto para o próximo boot)
 #   --root-password S    define a nova senha de root desta máquina (opcional; também lida de PHARUS_SENHA_ROOT).
 #                        Prefira a variável: o argumento fica visível no histórico do shell e na lista de processos.
 set -euo pipefail
@@ -244,8 +244,20 @@ fi
 ok "Kiosk instalado em /opt/pharus-terminal (config: /etc/pharus-terminal.conf)."
 info "Para sair do kiosk no dispositivo: Ctrl+Alt+F3 (login), depois 'pharus-parar'. Para voltar: 'pharus-iniciar'."
 
+# O driver de vídeo (vc4-kms-v3d) só carrega no boot: sem reiniciar o X não acha /dev/dri e o kiosk não abre. Por isso
+# reinicia sozinho, a não ser com --sem-iniciar ou se a resposta for "n" na pergunta. Com --yes ou sem terminal, não pergunta.
 if [[ $REINICIAR == 1 ]]; then
-	echo "Reinicie o dispositivo para o driver de vídeo entrar em uso (reboot)."
+	reiniciar=s
+	if [[ $SIM -eq 0 && -r /dev/tty && $INICIAR -eq 1 ]]; then
+		read -r -p "É preciso reiniciar para o driver de vídeo entrar em uso. Reiniciar agora? [S/n] " reiniciar </dev/tty
+	fi
+	if [[ $INICIAR -eq 1 && "${reiniciar:-s}" =~ ^[sSyY]$ ]]; then
+		info "Reiniciando em 3 segundos; o kiosk abre sozinho no boot."
+		# Desanexado: o ssh/curl que chamou o script precisa terminar normalmente antes da máquina cair.
+		nohup setsid sh -c 'sleep 3; systemctl reboot' >/dev/null 2>&1 </dev/null &
+	else
+		echo "Reinicie o dispositivo para o driver de vídeo entrar em uso (reboot)."
+	fi
 	exit 0
 fi
 
