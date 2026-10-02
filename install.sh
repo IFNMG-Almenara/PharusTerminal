@@ -95,7 +95,8 @@ amd64) ROTULO="x86_64 (amd64)" ;;
 esac
 DIETPI=0
 [[ -e /boot/dietpi/.version ]] && DIETPI=1
-MODELO="$(tr -d '\0' </proc/device-tree/model 2>/dev/null || true)"
+MODELO=""
+[[ -r /proc/device-tree/model ]] && MODELO="$(tr -d '\0' </proc/device-tree/model)"
 
 info "Dispositivo: ${PRETTY_NAME:-Debian $VERSION_CODENAME} — $ROTULO$([[ $DIETPI == 1 ]] && echo ', DietPi')${MODELO:+ ($MODELO)}"
 
@@ -203,10 +204,14 @@ if [[ -e /proc/device-tree/model ]] && grep -aq Raspberry /proc/device-tree/mode
 	modprobe bcm2835-codec 2>/dev/null || true
 fi
 
-# --- Autostart (só no DietPi; o instalar.sh do pacote já deixou o custom.sh pronto) ------------------------------------
+# --- Autostart (só no DietPi) -------------------------------------------------------------------------------------
+# O instalar.sh do pacote só copia o custom.sh se /var/lib/dietpi/dietpi-autostart já existir, o que não é o caso
+# numa imagem nova (a pasta só aparece depois do primeiro uso do dietpi-autostart). Por isso instala aqui também,
+# com -D (cria a pasta se faltar), antes de ligar o modo 17.
 
 if [[ $DIETPI == 1 ]]; then
 	info "ligando o autostart do DietPi (dietpi-autostart 17)"
+	install -D -m 755 "$PASTA/dietpi/custom.sh" /var/lib/dietpi/dietpi-autostart/custom.sh
 	/boot/dietpi/dietpi-autostart 17 >/dev/null
 fi
 
